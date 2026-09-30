@@ -1,0 +1,8 @@
+{
+  "name": "Firma 5S Ekipman Takip",
+  "short_name": "Firma 5S",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f7fb",
+  "theme_color": "#172033"
+}

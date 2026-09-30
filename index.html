@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Firma 5S | Ekipman Takip</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033;background:#f5f7fb}
+*{box-sizing:border-box} body{margin:0} header{background:#172033;color:#fff;padding:22px 18px}
+header h1{margin:0;font-size:23px} header p{margin:6px 0 0;opacity:.8}
+main{max-width:980px;margin:auto;padding:18px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.card,.panel{background:#fff;border-radius:15px;padding:16px;box-shadow:0 4px 18px #0000000d}.n{font-size:28px;font-weight:800}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}button,input,select{font:inherit;border:1px solid #d9dfeb;border-radius:10px;padding:11px}
+button{background:#172033;color:white;border:0;font-weight:650}.secondary{background:#e9eef7;color:#172033}
+input{flex:1;min-width:180px}.row{display:grid;grid-template-columns:1.1fr .8fr .8fr .8fr auto;gap:8px;align-items:center;padding:12px 0;border-bottom:1px solid #edf0f5}
+.tag{display:inline-block;padding:5px 8px;border-radius:20px;background:#edf2f8;font-size:12px}
+dialog{border:0;border-radius:16px;padding:20px;width:min(92vw,520px)} dialog input,dialog select{width:100%;margin:5px 0 12px}
+.qr{width:170px;height:170px;display:block;margin:12px auto}.small{font-size:12px;color:#657086}
+@media(max-width:700px){.cards{grid-template-columns:1fr 1fr}.row{grid-template-columns:1fr 1fr}.row>*:first-child{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<header><h1>Firma 5S</h1><p>QR Kodlu Ekipman Takip Sistemi</p></header>
+<main>
+<div class="cards">
+ <div class="card"><div class="small">Toplam ekipman</div><div class="n" id="total">0</div></div>
+ <div class="card"><div class="small">Yerinde</div><div class="n" id="inplace">0</div></div>
+ <div class="card"><div class="small">Kullanımda</div><div class="n" id="used">0</div></div>
+</div>
+<div class="toolbar"><input id="search" placeholder="Ekipman, seri no veya konum ara…"><button onclick="openAdd()">+ Ekipman Ekle</button><button class="secondary" onclick="exportData()">Yedekle</button></div>
+<div class="panel"><div id="list"></div></div>
+<p class="small">Veriler bu cihazın tarayıcısında saklanır. İlk sürüm pilot kullanım içindir.</p>
+</main>
+
+<dialog id="dlg"><form method="dialog">
+<h3 id="dlgTitle">Ekipman</h3>
+<label>Ekipman adı</label><input id="name" required>
+<label>Seri / Demirbaş No</label><input id="serial" required>
+<label>Konum</label><input id="location" required>
+<label>Durum</label><select id="status"><option>Yerinde</option><option>Kullanımda</option><option>Bakımda</option><option>Kayıp</option></select>
+<div id="qrbox"></div>
+<div class="toolbar"><button type="button" onclick="save()">Kaydet</button><button class="secondary" value="cancel">Kapat</button></div>
+</form></dialog>
+
+<script>
+const seed=[
+ {name:"Dijital Multimetre",serial:"ELK-001",location:"Elektronik Atölyesi / A1",status:"Yerinde"},
+ {name:"Havya İstasyonu",serial:"ELK-002",location:"Elektronik Atölyesi / A2",status:"Yerinde"},
+ {name:"Osiloskop",serial:"ELK-003",location:"Elektronik Atölyesi / B1",status:"Kullanımda"},
+ {name:"Tork Anahtarı",serial:"MEK-001",location:"Mekanik Atölye / T1",status:"Yerinde"},
+ {name:"Kumpas",serial:"MEK-002",location:"Mekanik Atölye / T2",status:"Yerinde"},
+ {name:"Şarjlı Matkap",serial:"MEK-003",location:"Mekanik Atölye / T3",status:"Kullanımda"},
+ {name:"ESD Bileklik Test Cihazı",serial:"KLT-001",location:"Kalite / K1",status:"Yerinde"},
+ {name:"Etiket Yazıcı",serial:"DEP-001",location:"Depo / D1",status:"Yerinde"}
+];
+let data=JSON.parse(localStorage.getItem("firma5s")||"null")||seed, edit=-1;
+function persist(){localStorage.setItem("firma5s",JSON.stringify(data));render()}
+function render(){
+ let q=document.querySelector("#search").value.toLowerCase();
+ let arr=data.map((x,i)=>({...x,i})).filter(x=>Object.values(x).join(" ").toLowerCase().includes(q));
+ document.querySelector("#list").innerHTML=arr.map(x=>`<div class="row"><b>${x.name}<br><span class="small">${x.serial}</span></b><span>${x.location}</span><span class="tag">${x.status}</span><button onclick="openEdit(${x.i})">Aç / QR</button><button class="secondary" onclick="del(${x.i})">Sil</button></div>`).join("")||"Kayıt bulunamadı.";
+ total.textContent=data.length; inplace.textContent=data.filter(x=>x.status==="Yerinde").length; used.textContent=data.filter(x=>x.status==="Kullanımda").length;
+}
+function openAdd(){edit=-1;name.value="";serial.value="";location.value="";status.value="Yerinde";qrbox.innerHTML="";dlg.showModal()}
+function openEdit(i){edit=i;let x=data[i];name.value=x.name;serial.value=x.serial;location.value=x.location;status.value=x.status;
+ let payload=location.href.split("#")[0]+"#"+encodeURIComponent(x.serial);
+ qrbox.innerHTML=`<img class="qr" alt="QR" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(payload)}"><div class="small" style="text-align:center">QR etiketi: ${x.serial}</div>`;dlg.showModal()}
+function save(){let x={name:name.value.trim(),serial:serial.value.trim(),location:location.value.trim(),status:status.value};if(!x.name||!x.serial||!x.location)return alert("Alanları doldur.");if(edit<0)data.push(x);else data[edit]=x;persist();dlg.close()}
+function del(i){if(confirm("Bu ekipman silinsin mi?")){data.splice(i,1);persist()}}
+function exportData(){let b=new Blob([JSON.stringify(data,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="firma-5s-yedek.json";a.click()}
+search.oninput=render;render();
+if(location.hash){let s=decodeURIComponent(location.hash.slice(1)),i=data.findIndex(x=>x.serial===s);if(i>=0)setTimeout(()=>openEdit(i),200)}
+</script>
+</body></html>
