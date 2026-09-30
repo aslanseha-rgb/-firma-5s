@@ -1,17 +1,6 @@
-# Firma 5S – QR Kodlu Ekipman Takip
+# Firma 5S V2
+QR kodlu ekipman yönetimi prototipi.
 
-Mobil uyumlu, kurulumsuz pilot 5S ekipman takip uygulaması.
+V2: ekipman ekleme, arama, teslim alma/iade, sorumlu ve departman, tarih-saat işlem geçmişi, durum yönetimi, QR ve JSON yedek.
 
-## Özellikler
-- Ekipman / seri no / konum / durum kaydı
-- Arama
-- QR etiketi oluşturma
-- QR bağlantısıyla ekipmanı doğrudan açma
-- JSON yedek alma
-- Örnek ekipman listesi
-- GitHub Pages ile ücretsiz yayınlanabilir
-
-## GitHub Pages
-Repository > Settings > Pages > Deploy from a branch > main / root > Save.
-
-Not: Bu pilot sürüm verileri tarayıcıdaki localStorage'da saklar. Çok kullanıcılı şirket sürümünde merkezi veritabanı ve kullanıcı yetkilendirmesi eklenmelidir.
+Not: Bu sürüm localStorage kullanır; farklı cihazların ortak veri görmesi için sonraki aşamada merkezi veritabanı gerekir.
